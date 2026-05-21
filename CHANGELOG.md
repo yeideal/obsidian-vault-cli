@@ -1,10 +1,16 @@
 # Changelog
 
-## Unreleased
+## 0.1.2
+
+- Add an `Overall:` health line and meaningful status exit code.
+- Avoid stopping the systemd service during Debian package upgrades.
+
+## 0.1.1
 
 - Add `ocs setup` for guided first-run configuration.
 - Add `ocs status` for config, vault, CouchDB, state, and systemd checks.
 - Restore GitHub Actions CI workflow.
+- Ignore ambient proxy environment variables for CouchDB requests.
 
 ## 0.1.0
 

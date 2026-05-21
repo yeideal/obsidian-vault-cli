@@ -27,9 +27,11 @@ class CouchClient:
         self.base = config.url.rstrip("/")
         self.db_url = f"{self.base}/{quote(config.database, safe='')}"
         self.auth = (config.username, config.password) if config.username else None
+        self.session = requests.Session()
+        self.session.trust_env = False
 
     def _request(self, method: str, url: str, **kwargs: Any) -> requests.Response:
-        response = requests.request(method, url, auth=self.auth, timeout=self.timeout, **kwargs)
+        response = self.session.request(method, url, auth=self.auth, timeout=self.timeout, **kwargs)
         if response.status_code >= 400:
             body = response.text[:500]
             raise CouchError(f"{method} {url} failed: HTTP {response.status_code}: {body}")
@@ -42,7 +44,7 @@ class CouchClient:
 
     def get_doc(self, doc_id: str) -> dict[str, Any] | None:
         url = f"{self.db_url}/{quote(doc_id, safe='')}"
-        response = requests.get(url, auth=self.auth, timeout=self.timeout)
+        response = self.session.get(url, auth=self.auth, timeout=self.timeout)
         if response.status_code == 404:
             return None
         if response.status_code >= 400:

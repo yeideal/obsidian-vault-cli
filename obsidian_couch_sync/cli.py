@@ -155,8 +155,11 @@ def cmd_status(args: argparse.Namespace) -> int:
 
     print("Obsidian Couch Sync status")
     print(f"Version: {__version__}")
-    print(f"Config: {cfg_path} ({'exists' if cfg_path.exists() else 'missing'})")
-    print(f"Vault: {vault or '(not configured)'} ({'ok' if vault.is_dir() else 'missing'})")
+    config_ok = cfg_path.exists()
+    vault_ok = vault.is_dir()
+    couch_ok = False
+    print(f"Config: {cfg_path} ({'exists' if config_ok else 'missing'})")
+    print(f"Vault: {vault or '(not configured)'} ({'ok' if vault_ok else 'missing'})")
     if vault.is_dir():
         print(f"Markdown files: {count_markdown(vault)}")
     print(f"Remote root: {sync_cfg.get('root') or '(vault root)'}")
@@ -167,6 +170,7 @@ def cmd_status(args: argparse.Namespace) -> int:
 
     try:
         db = couch_from_config(cfg).ping().get("database", {})
+        couch_ok = True
         print(f"CouchDB: ok ({db.get('db_name', cfg['couchdb']['database'])})")
     except (CouchError, Exception) as exc:
         print(f"CouchDB: error ({exc})")
@@ -179,7 +183,15 @@ def cmd_status(args: argparse.Namespace) -> int:
     print(f"User service: {user_state}")
     if user_err:
         print(f"User service note: {user_err}")
-    return 0
+    service_ok = system_state == "active" or user_state == "active"
+    if config_ok and vault_ok and couch_ok and service_ok:
+        print("Overall: ok")
+        return 0
+    if config_ok and vault_ok and couch_ok:
+        print("Overall: warning (sync works manually, but service is not active)")
+        return 0
+    print("Overall: error")
+    return 1
 
 
 def print_result(result: Any) -> None:
