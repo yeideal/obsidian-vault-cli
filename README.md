@@ -18,7 +18,7 @@ encryption, test against a separate database first.
 
 ## Features
 
-- `config`, `ping`, `sync`, `watch`, and `service` commands.
+- `setup`, `status`, `config`, `ping`, `sync`, `watch`, and `service` commands.
 - JSON config file plus environment variable overrides.
 - One-shot sync and continuous polling mode.
 - State tracking to skip unchanged files.
@@ -44,6 +44,15 @@ sudo apt install ./dist/obsidian-couch-sync_0.1.0_all.deb
 ## Quick Start
 
 ```bash
+ocs setup
+ocs status
+ocs sync --dry-run
+ocs sync
+```
+
+Or configure manually:
+
+```bash
 ocs config set couchdb.url http://127.0.0.1:5984
 ocs config set couchdb.username obsidian
 ocs config set couchdb.password 'secret'
@@ -52,6 +61,7 @@ ocs config set sync.vault_path '/path/to/Obsidian Vault'
 ocs config set sync.root 'Hermes Daily Tasks'
 
 ocs ping
+ocs status
 ocs sync --dry-run
 ocs sync
 ```
@@ -70,6 +80,8 @@ ocs config show
 ocs config get couchdb.url
 ocs config set couchdb.url http://127.0.0.1:5984
 
+ocs setup
+ocs status
 ocs ping
 ocs sync --dry-run
 ocs sync --force

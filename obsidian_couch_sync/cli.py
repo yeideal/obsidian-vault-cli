@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -10,7 +12,8 @@ from typing import Any
 
 from . import __version__
 from .config import default_config_path, get_nested, load_config, save_config, set_nested
-from .couch import CouchClient, CouchConfig
+from .couch import CouchClient, CouchConfig, CouchError
+from .state import default_state_path, load_state
 from .syncer import sync_once
 
 
@@ -53,6 +56,129 @@ def cmd_ping(args: argparse.Namespace) -> int:
     cfg = load_config(Path(args.config).expanduser() if args.config else None)
     result = couch_from_config(cfg).ping()
     print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0
+
+
+def prompt_text(label: str, default: str = "", *, secret: bool = False) -> str:
+    suffix = f" [{default}]" if default else ""
+    prompt = f"{label}{suffix}: "
+    if secret:
+        value = getpass.getpass(prompt)
+    else:
+        value = input(prompt)
+    return value.strip() or default
+
+
+def prompt_yes_no(label: str, default: bool = True) -> bool:
+    suffix = "Y/n" if default else "y/N"
+    value = input(f"{label} [{suffix}]: ").strip().lower()
+    if not value:
+        return default
+    return value in {"y", "yes"}
+
+
+def cmd_setup(args: argparse.Namespace) -> int:
+    cfg_path = Path(args.config).expanduser() if args.config else default_config_path()
+    cfg = load_config(cfg_path)
+    print("Obsidian Couch Sync setup")
+    print(f"Config: {cfg_path}")
+    print()
+
+    couch = cfg["couchdb"]
+    sync_cfg = cfg["sync"]
+    couch["url"] = prompt_text("CouchDB URL", couch.get("url") or "http://127.0.0.1:5984")
+    couch["username"] = prompt_text("CouchDB username", couch.get("username", ""))
+    existing_password = couch.get("password", "")
+    password_label = "CouchDB password"
+    if existing_password:
+        password_label += " (leave blank to keep existing)"
+    new_password = prompt_text(password_label, "", secret=True)
+    if new_password:
+        couch["password"] = new_password
+    couch["database"] = prompt_text("CouchDB database", couch.get("database") or "obsidian")
+
+    default_vault = sync_cfg.get("vault_path") or str(Path.home() / "Documents" / "Obsidian Vault")
+    sync_cfg["vault_path"] = prompt_text("Local vault path", default_vault)
+    sync_cfg["root"] = prompt_text("Remote root folder (optional)", sync_cfg.get("root", ""))
+
+    save_config(cfg, cfg_path)
+    print(f"\nSaved config to {cfg_path}")
+
+    if prompt_yes_no("Test CouchDB connection now?", True):
+        try:
+            result = couch_from_config(cfg).ping()
+            db = result.get("database", {})
+            print(f"ok: CouchDB database {db.get('db_name', couch['database'])!r} is reachable")
+        except Exception as exc:
+            print(f"warning: CouchDB check failed: {exc}")
+
+    if prompt_yes_no("Run a dry-run sync now?", True):
+        try:
+            result = sync_once(cfg, couch_from_config(cfg), dry_run=True, force=False)
+            print_result(result)
+        except Exception as exc:
+            print(f"warning: dry-run failed: {exc}")
+
+    print("\nNext steps:")
+    print("  ocs status")
+    print("  ocs sync --dry-run")
+    print("  ocs sync")
+    print("  ocs service install --user")
+    return 0
+
+
+def count_markdown(vault: Path) -> int:
+    if not vault.is_dir():
+        return 0
+    return sum(1 for path in vault.rglob("*.md") if path.is_file())
+
+
+def systemctl_status(user: bool) -> tuple[str, str]:
+    cmd = ["systemctl"]
+    if user:
+        cmd.append("--user")
+    cmd += ["is-active", "obsidian-couch-sync.service"]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+    except Exception as exc:
+        return "unknown", str(exc)
+    return proc.stdout.strip() or "unknown", proc.stderr.strip()
+
+
+def cmd_status(args: argparse.Namespace) -> int:
+    cfg_path = Path(args.config).expanduser() if args.config else default_config_path()
+    cfg = load_config(cfg_path)
+    sync_cfg = cfg.get("sync", {})
+    vault = Path(sync_cfg.get("vault_path") or "").expanduser()
+    state_path = Path(sync_cfg.get("state_path") or default_state_path()).expanduser()
+    state = load_state(state_path)
+
+    print("Obsidian Couch Sync status")
+    print(f"Version: {__version__}")
+    print(f"Config: {cfg_path} ({'exists' if cfg_path.exists() else 'missing'})")
+    print(f"Vault: {vault or '(not configured)'} ({'ok' if vault.is_dir() else 'missing'})")
+    if vault.is_dir():
+        print(f"Markdown files: {count_markdown(vault)}")
+    print(f"Remote root: {sync_cfg.get('root') or '(vault root)'}")
+    print(f"State: {state_path} ({'exists' if state_path.exists() else 'missing'})")
+    print(f"Tracked files: {len(state.get('files', {}))}")
+    if state.get("last_run_at"):
+        print(f"Last run: {time.strftime('%Y-%m-%d %H:%M:%S %Z', time.localtime(state['last_run_at']))}")
+
+    try:
+        db = couch_from_config(cfg).ping().get("database", {})
+        print(f"CouchDB: ok ({db.get('db_name', cfg['couchdb']['database'])})")
+    except (CouchError, Exception) as exc:
+        print(f"CouchDB: error ({exc})")
+
+    system_state, system_err = systemctl_status(False)
+    user_state, user_err = systemctl_status(True)
+    print(f"System service: {system_state}")
+    if system_err:
+        print(f"System service note: {system_err}")
+    print(f"User service: {user_state}")
+    if user_err:
+        print(f"User service note: {user_err}")
     return 0
 
 
@@ -157,6 +283,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     ping = sub.add_parser("ping", help="Check CouchDB connectivity")
     ping.set_defaults(func=cmd_ping)
+
+    setup = sub.add_parser("setup", help="Interactive first-run configuration")
+    setup.set_defaults(func=cmd_setup)
+
+    status = sub.add_parser("status", help="Show configuration and runtime status")
+    status.set_defaults(func=cmd_status)
 
     sync = sub.add_parser("sync", help="Run one sync")
     sync.add_argument("--dry-run", action="store_true", help="Scan and report without writing")

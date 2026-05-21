@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add `ocs setup` for guided first-run configuration.
+- Add `ocs status` for config, vault, CouchDB, state, and systemd checks.
+- Restore GitHub Actions CI workflow.
+
 ## 0.1.0
 
 - Initial CLI with `config`, `ping`, `sync`, `watch`, and `service` commands.
