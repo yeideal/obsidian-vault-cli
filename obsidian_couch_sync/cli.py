@@ -149,18 +149,19 @@ def cmd_status(args: argparse.Namespace) -> int:
     cfg_path = Path(args.config).expanduser() if args.config else default_config_path()
     cfg = load_config(cfg_path)
     sync_cfg = cfg.get("sync", {})
-    vault = Path(sync_cfg.get("vault_path") or "").expanduser()
+    vault_path = str(sync_cfg.get("vault_path") or "").strip()
+    vault = Path(vault_path).expanduser() if vault_path else Path()
     state_path = Path(sync_cfg.get("state_path") or default_state_path()).expanduser()
     state = load_state(state_path)
 
     print("Obsidian Couch Sync status")
     print(f"Version: {__version__}")
     config_ok = cfg_path.exists()
-    vault_ok = vault.is_dir()
+    vault_ok = bool(vault_path) and vault.is_dir()
     couch_ok = False
     print(f"Config: {cfg_path} ({'exists' if config_ok else 'missing'})")
-    print(f"Vault: {vault or '(not configured)'} ({'ok' if vault_ok else 'missing'})")
-    if vault.is_dir():
+    print(f"Vault: {vault if vault_path else '(not configured)'} ({'ok' if vault_ok else 'missing'})")
+    if vault_ok:
         print(f"Markdown files: {count_markdown(vault)}")
     print(f"Remote root: {sync_cfg.get('root') or '(vault root)'}")
     print(f"State: {state_path} ({'exists' if state_path.exists() else 'missing'})")
@@ -210,11 +211,12 @@ def cmd_sync(args: argparse.Namespace) -> int:
 
 
 def cmd_watch(args: argparse.Namespace) -> int:
-    cfg = load_config(Path(args.config).expanduser() if args.config else None)
+    cfg_path = Path(args.config).expanduser() if args.config else None
     interval = args.interval
     print(f"watching every {interval}s; press Ctrl-C to stop", flush=True)
     while True:
         try:
+            cfg = load_config(cfg_path)
             result = sync_once(cfg, couch_from_config(cfg), dry_run=False, force=False)
             print_result(result)
         except KeyboardInterrupt:

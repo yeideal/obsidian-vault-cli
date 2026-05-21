@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.3
+
+- Make `watch` reload configuration every loop.
+- Refuse to sync when `sync.vault_path` is empty instead of scanning cwd.
+
 ## 0.1.2
 
 - Add an `Overall:` health line and meaningful status exit code.

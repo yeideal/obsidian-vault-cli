@@ -42,7 +42,10 @@ def iter_markdown(vault: Path, includes: list[str], excludes: list[str]) -> Iter
 
 def sync_once(cfg: dict, client: CouchClient, *, dry_run: bool = False, force: bool = False) -> SyncResult:
     sync_cfg = cfg.get("sync", {})
-    vault = Path(sync_cfg.get("vault_path") or "").expanduser()
+    vault_path = str(sync_cfg.get("vault_path") or "").strip()
+    if not vault_path:
+        raise ValueError("sync.vault_path is not configured; run `ocs setup` first")
+    vault = Path(vault_path).expanduser()
     if not vault.exists():
         raise FileNotFoundError(f"vault path does not exist: {vault}")
     if not vault.is_dir():
