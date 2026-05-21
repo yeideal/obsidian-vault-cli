@@ -1,0 +1,10 @@
+Package: obsidian-couch-sync
+Version: 0.1.0
+Section: utils
+Priority: optional
+Architecture: all
+Depends: python3, python3-requests
+Maintainer: Obsidian Couch Sync contributors <maintainers@example.invalid>
+Description: Headless Markdown-to-CouchDB sync for Obsidian
+ A command-line tool and optional systemd service for syncing local Markdown
+ files into CouchDB using an Obsidian LiveSync-style document layout.

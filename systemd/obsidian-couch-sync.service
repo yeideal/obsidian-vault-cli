@@ -1,0 +1,13 @@
+[Unit]
+Description=Obsidian Couch Sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/obsidian-couch-sync watch
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

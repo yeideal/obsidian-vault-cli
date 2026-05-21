@@ -1,0 +1,16 @@
+{
+  "couchdb": {
+    "url": "http://127.0.0.1:5984",
+    "username": "obsidian",
+    "password": "change-me",
+    "database": "obsidian"
+  },
+  "sync": {
+    "vault_path": "/srv/obsidian-vault",
+    "root": "Hermes Daily Tasks",
+    "include": ["**/*.md"],
+    "exclude": [".obsidian/**", ".git/**"],
+    "state_path": "",
+    "chunk_size": 900000
+  }
+}
