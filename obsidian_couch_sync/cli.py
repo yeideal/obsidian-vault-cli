@@ -199,7 +199,8 @@ def print_result(result: Any) -> None:
     print(
         "sync: "
         f"scanned={result.scanned} changed={result.changed} "
-        f"written={result.written} skipped={result.skipped} errors={result.errors}"
+        f"written={result.written} skipped={result.skipped} errors={result.errors}",
+        flush=True,
     )
 
 
@@ -235,7 +236,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart={executable} watch
+ExecStart={executable} watch --interval 5
 Restart=always
 RestartSec=10
 
@@ -310,7 +311,7 @@ def build_parser() -> argparse.ArgumentParser:
     sync.set_defaults(func=cmd_sync)
 
     watch = sub.add_parser("watch", help="Continuously sync on an interval")
-    watch.add_argument("--interval", type=int, default=30)
+    watch.add_argument("--interval", type=int, default=5)
     watch.set_defaults(func=cmd_watch)
 
     service = sub.add_parser("service", help="Generate or install a systemd service")

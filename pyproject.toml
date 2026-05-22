@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "obsidian-couch-sync"
-version = "0.1.4"
+version = "0.1.5"
 description = "Headless Markdown-to-CouchDB sync for Obsidian Self-hosted LiveSync style vaults"
 readme = "README.md"
 requires-python = ">=3.10"

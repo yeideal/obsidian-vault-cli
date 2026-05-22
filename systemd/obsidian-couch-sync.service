@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/obsidian-couch-sync watch
+ExecStart=/usr/bin/obsidian-couch-sync watch --interval 5
 Restart=always
 RestartSec=10
 

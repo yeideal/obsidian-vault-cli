@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.5
+
+- Make the watch service poll every 5 seconds by default.
+- Flush watch log output after each sync pass so systemd status shows recent activity.
+
 ## 0.1.4
 
 - Write LiveSync metadata IDs in lower-case path form while preserving the original `path`.
