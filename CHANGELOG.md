@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6
+
+- Sync all vault files by default instead of only Markdown files.
+- Propagate local deletions to LiveSync by writing deleted metadata documents.
+- Parse JSON values in `ocs config set`, so arrays and booleans can be configured.
+- Show total file count in `ocs status`.
+
 ## 0.1.5
 
 - Make the watch service poll every 5 seconds by default.

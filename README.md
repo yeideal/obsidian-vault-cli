@@ -1,13 +1,13 @@
 # obsidian-couch-sync
 
 `obsidian-couch-sync` is a headless command-line tool for servers and agents
-that generate Markdown and need to push those files into a CouchDB-backed
+that generate vault files and need to push those files into a CouchDB-backed
 Obsidian Self-hosted LiveSync-style vault.
 
 It is designed for workflows like:
 
 ```text
-cron / agent / script -> local Markdown folder -> CouchDB -> Obsidian mobile
+cron / agent / script -> local vault folder -> CouchDB -> Obsidian mobile
 ```
 
 ## Status
@@ -38,7 +38,7 @@ From the generated Debian package:
 
 ```bash
 ./debian/build-deb.sh
-sudo apt install ./dist/obsidian-couch-sync_0.1.5_all.deb
+sudo apt install ./dist/obsidian-couch-sync_0.1.6_all.deb
 ```
 
 ## Quick Start
@@ -109,7 +109,7 @@ Example:
   "sync": {
     "vault_path": "/srv/obsidian-vault",
     "root": "Hermes Daily Tasks",
-    "include": ["**/*.md"],
+    "include": ["**/*"],
     "exclude": [".obsidian/**", ".git/**"],
     "state_path": "",
     "chunk_size": 900000

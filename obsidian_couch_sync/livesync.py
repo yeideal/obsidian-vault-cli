@@ -60,3 +60,20 @@ def build_livesync_docs(
         for child_id, chunk in zip(child_ids, chunks)
     ]
     return [parent, *leaves]
+
+
+def build_livesync_delete_doc(path: str, existing: dict | None = None, *, mtime_ms: int | None = None) -> dict:
+    now_ms = int(time.time() * 1000)
+    path = normalize_vault_path(path)
+    existing = existing or {}
+    return {
+        "_id": metadata_id(path),
+        "path": existing.get("path") or path,
+        "children": list(existing.get("children") or []),
+        "ctime": existing.get("ctime") or now_ms,
+        "mtime": mtime_ms or now_ms,
+        "size": existing.get("size") or 0,
+        "type": "plain",
+        "eden": existing.get("eden") or {},
+        "deleted": True,
+    }

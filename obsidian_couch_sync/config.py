@@ -16,7 +16,7 @@ DEFAULT_CONFIG = {
     "sync": {
         "vault_path": "",
         "root": "",
-        "include": ["**/*.md"],
+        "include": ["**/*"],
         "exclude": [".obsidian/**", ".git/**"],
         "state_path": "",
         "chunk_size": 900_000,

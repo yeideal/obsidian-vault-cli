@@ -45,7 +45,11 @@ def cmd_config(args: argparse.Namespace) -> int:
         print(get_nested(cfg, args.key))
         return 0
     if args.config_action == "set":
-        set_nested(cfg, args.key, args.value)
+        try:
+            value = json.loads(args.value)
+        except json.JSONDecodeError:
+            value = args.value
+        set_nested(cfg, args.key, value)
         path = save_config(cfg, cfg_path)
         print(f"saved {args.key} to {path}")
         return 0
@@ -133,6 +137,12 @@ def count_markdown(vault: Path) -> int:
     return sum(1 for path in vault.rglob("*.md") if path.is_file())
 
 
+def count_files(vault: Path) -> int:
+    if not vault.is_dir():
+        return 0
+    return sum(1 for path in vault.rglob("*") if path.is_file())
+
+
 def systemctl_status(user: bool) -> tuple[str, str]:
     cmd = ["systemctl"]
     if user:
@@ -162,6 +172,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     print(f"Config: {cfg_path} ({'exists' if config_ok else 'missing'})")
     print(f"Vault: {vault if vault_path else '(not configured)'} ({'ok' if vault_ok else 'missing'})")
     if vault_ok:
+        print(f"Files: {count_files(vault)}")
         print(f"Markdown files: {count_markdown(vault)}")
     print(f"Remote root: {sync_cfg.get('root') or '(vault root)'}")
     print(f"State: {state_path} ({'exists' if state_path.exists() else 'missing'})")
@@ -199,7 +210,8 @@ def print_result(result: Any) -> None:
     print(
         "sync: "
         f"scanned={result.scanned} changed={result.changed} "
-        f"written={result.written} skipped={result.skipped} errors={result.errors}",
+        f"written={result.written} deleted={result.deleted} "
+        f"skipped={result.skipped} errors={result.errors}",
         flush=True,
     )
 
@@ -279,7 +291,7 @@ def cmd_service(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="obsidian-couch-sync",
-        description="Sync local Markdown files into CouchDB for Obsidian LiveSync-style vaults.",
+        description="Sync local vault files into CouchDB for Obsidian LiveSync-style vaults.",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("--config", help="Path to config JSON")

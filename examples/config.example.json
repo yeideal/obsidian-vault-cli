@@ -8,7 +8,7 @@
   "sync": {
     "vault_path": "/srv/obsidian-vault",
     "root": "Hermes Daily Tasks",
-    "include": ["**/*.md"],
+    "include": ["**/*"],
     "exclude": [".obsidian/**", ".git/**"],
     "state_path": "",
     "chunk_size": 900000
