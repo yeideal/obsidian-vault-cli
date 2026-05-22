@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+
+- Write LiveSync metadata IDs in lower-case path form while preserving the original `path`.
+- Use content-hash leaf IDs compatible with plain, unencrypted LiveSync documents.
+- Repair missing remote metadata documents even when local state says the file content is unchanged.
+
 ## 0.1.3
 
 - Make `watch` reload configuration every loop.

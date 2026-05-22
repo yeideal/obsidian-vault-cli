@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Iterable
 
 from .couch import CouchClient
-from .livesync import build_livesync_docs, normalize_vault_path
+from .livesync import build_livesync_docs, metadata_id, normalize_vault_path
 from .state import default_state_path, load_state, save_state
 
 
@@ -69,8 +69,9 @@ def sync_once(cfg: dict, client: CouchClient, *, dry_run: bool = False, force: b
         content = path.read_text(encoding="utf-8", errors="replace")
         digest = digest_text(content)
         if not force and files_state.get(target_path) == digest:
-            result.skipped += 1
-            continue
+            if client.get_doc(metadata_id(target_path)) is not None:
+                result.skipped += 1
+                continue
         result.changed += 1
         if dry_run:
             continue

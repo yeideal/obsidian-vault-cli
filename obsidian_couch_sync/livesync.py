@@ -13,9 +13,13 @@ def normalize_vault_path(path: str) -> str:
     return "/".join(parts)
 
 
-def leaf_id(parent_path: str, index: int, content: str) -> str:
-    digest = hashlib.sha1(f"{parent_path}\0{index}\0{content}".encode("utf-8")).hexdigest()
-    return f"h:+{digest[:24]}"
+def metadata_id(path: str) -> str:
+    return normalize_vault_path(path).lower()
+
+
+def leaf_id(content: str) -> str:
+    digest = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    return f"h:{digest[:12]}"
 
 
 def build_livesync_docs(
@@ -36,9 +40,9 @@ def build_livesync_docs(
     ctime_ms = ctime_ms or now_ms
     mtime_ms = mtime_ms or now_ms
     chunks = [content[i : i + chunk_size] for i in range(0, len(content), chunk_size)] or [""]
-    child_ids = [leaf_id(path, idx, chunk) for idx, chunk in enumerate(chunks)]
+    child_ids = [leaf_id(chunk) for chunk in chunks]
     parent = {
-        "_id": path,
+        "_id": metadata_id(path),
         "path": path,
         "children": child_ids,
         "ctime": ctime_ms,
@@ -46,7 +50,6 @@ def build_livesync_docs(
         "size": len(content.encode("utf-8")),
         "type": "plain",
         "eden": {},
-        "deleted": False,
     }
     leaves = [
         {
