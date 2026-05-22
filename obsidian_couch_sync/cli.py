@@ -210,7 +210,7 @@ def print_result(result: Any) -> None:
     print(
         "sync: "
         f"scanned={result.scanned} changed={result.changed} "
-        f"written={result.written} deleted={result.deleted} "
+        f"written={result.written} pulled={result.pulled} deleted={result.deleted} "
         f"skipped={result.skipped} errors={result.errors}",
         flush=True,
     )

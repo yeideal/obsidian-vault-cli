@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.8
+
+- Ignore remote `deleted: true` metadata when a matching local file still exists.
+  Local deletions are still propagated to CouchDB, but remote tombstones are not
+  treated as authoritative because some LiveSync histories keep content-bearing
+  metadata marked deleted.
+
+## 0.1.7
+
+- Pull remote plain LiveSync document changes back into the local vault.
+- Pull remote-only plain LiveSync documents into the local vault.
+- Report pulled files in sync output.
+
 ## 0.1.6
 
 - Sync all vault files by default instead of only Markdown files.

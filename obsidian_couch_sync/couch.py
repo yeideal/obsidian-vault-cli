@@ -42,6 +42,11 @@ class CouchClient:
         db = self._request("GET", self.db_url).json()
         return {"server": server, "database": db}
 
+    def all_docs(self, *, include_docs: bool = True) -> list[dict[str, Any]]:
+        query = "?include_docs=true" if include_docs else ""
+        response = self._request("GET", f"{self.db_url}/_all_docs{query}").json()
+        return list(response.get("rows") or [])
+
     def get_doc(self, doc_id: str) -> dict[str, Any] | None:
         url = f"{self.db_url}/{quote(doc_id, safe='')}"
         response = self.session.get(url, auth=self.auth, timeout=self.timeout)

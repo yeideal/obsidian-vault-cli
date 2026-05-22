@@ -38,7 +38,7 @@ From the generated Debian package:
 
 ```bash
 ./debian/build-deb.sh
-sudo apt install ./dist/obsidian-couch-sync_0.1.6_all.deb
+sudo apt install ./dist/obsidian-couch-sync_0.1.8_all.deb
 ```
 
 ## Quick Start
